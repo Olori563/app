@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appointment App</title>
+
+<style>
+body {
+  margin:0;
+  font-family: Arial;
+  background: linear-gradient(135deg,#0f172a,#1e293b);
+  color:white;
+  display:flex;
+  justify-content:center;
+}
+
+.container {
+  max-width:500px;
+  width:100%;
+  padding:20px;
+  display:none;
+}
+
+header {
+  text-align:center;
+  font-size:26px;
+  margin-bottom:10px;
+}
+
+input, textarea {
+  width:100%;
+  padding:12px;
+  margin:6px 0;
+  border-radius:10px;
+  border:none;
+  font-size:16px;
+}
+
+button {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#22c55e;
+  color:white;
+  font-size:16px;
+  margin-top:8px;
+}
+
+.logout {
+  background:#ef4444;
+}
+
+.card {
+  background:#1e293b;
+  padding:15px;
+  border-radius:12px;
+  margin:10px 0;
+}
+
+.footer {
+  text-align:center;
+  margin-top:20px;
+  color:#94a3b8;
+}
+
+/* LOCK */
+#lock, #setpass {
+  position:fixed;
+  width:100%;
+  height:100%;
+  background:#0f172a;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+</style>
+</head>
+
+<body>
+
+<!-- CREATE PASSWORD -->
+<div id="setpass">
+  <h2>Create Password</h2>
+  <input type="password" id="newpass">
+  <button onclick="setPass()">Save</button>
+</div>
+
+<!-- LOCK SCREEN -->
+<div id="lock">
+  <h2>Enter Password</h2>
+  <input type="password" id="pass">
+  <button onclick="unlock()">Unlock</button>
+</div>
+
+<!-- APP -->
+<div class="container" id="app">
+
+<header>📅 Appointment</header>
+
+<button class="logout" onclick="logout()">Logout</button>
+
+<input id="search" placeholder="🔍 Search appointments..." oninput="searchAppt()">
+
+<h3>Add Appointment</h3>
+<input type="date" id="date">
+<input type="time" id="time">
+<textarea id="reason" placeholder="Reason"></textarea>
+<button onclick="addAppt()">Add</button>
+
+<h3>Results</h3>
+<div id="list"></div>
+
+<div class="footer">Powered by Jubril</div>
+
+</div>
+
+<script>
+let appts = JSON.parse(localStorage.getItem("appts")) || [];
+
+/* PASSWORD */
+function setPass(){
+  const p=document.getElementById("newpass").value.trim();
+  if(!p) return alert("Enter password");
+  localStorage.setItem("pass",p);
+  location.reload();
+}
+
+function unlock(){
+  if(document.getElementById("pass").value===localStorage.getItem("pass")){
+    document.getElementById("lock").style.display="none";
+    document.getElementById("app").style.display="block";
+    document.getElementById("pass").value="";
+  } else alert("Wrong password");
+}
+
+/* LOGOUT FUNCTION (NEW) */
+function logout(){
+  document.getElementById("app").style.display="none";
+  document.getElementById("lock").style.display="flex";
+  document.getElementById("pass").value="";
+}
+
+/* INIT */
+if(!localStorage.getItem("pass")){
+  document.getElementById("setpass").style.display="flex";
+  document.getElementById("lock").style.display="none";
+}else{
+  document.getElementById("setpass").style.display="none";
+}
+
+/* ADD */
+function addAppt(){
+  const d=document.getElementById("date");
+  const t=document.getElementById("time");
+  const r=document.getElementById("reason");
+
+  if(!d.value||!t.value||!r.value){
+    alert("Fill all fields");
+    return;
+  }
+
+  appts.push({date:d.value,time:t.value,reason:r.value});
+  localStorage.setItem("appts",JSON.stringify(appts));
+
+  // CLEAR INPUTS
+  d.value="";
+  t.value="";
+  r.value="";
+  document.getElementById("search").value="";
+
+  // CLEAR SCREEN
+  document.getElementById("list").innerHTML="";
+}
+
+/* SEARCH */
+function searchAppt(){
+  const q=document.getElementById("search").value.toLowerCase().trim();
+  const list=document.getElementById("list");
+
+  list.innerHTML="";
+
+  if(!q) return;
+
+  const filtered=appts.filter(a=>
+    a.date.includes(q) ||
+    a.time.includes(q) ||
+    a.reason.toLowerCase().includes(q)
+  );
+
+  filtered.forEach(a=>{
+    list.innerHTML+=`
+      <div class="card">
+        <strong>${a.date} at ${a.time}</strong>
+        <p>${a.reason}</p>
+      </div>
+    `;
+  });
+}
+</script>
+
+</body>
+</html>
